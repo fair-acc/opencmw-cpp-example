@@ -1,0 +1,39 @@
+# Build Files
+**/CMakeFiles/
+**/CMakeCache.txt
+**cmake_install.cmake
+compile_commands.json
+Makefile
+**CTestTestfile.cmake
+
+# Library files
+lib/
+
+# Binary files
+bin/
+build/
+out/
+cmake-build-*/
+
+# Annoying OS Generated Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.directory
+*~
+
+# IDE files
+.vs/
+.idea/
+.vscode/
+.cache
+language.settings.xml
+**/**.swp
+CMakeLists.txt.user
+
+# python venv files
+virtualenv/
