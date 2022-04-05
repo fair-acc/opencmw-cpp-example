@@ -15,7 +15,7 @@ build/src/MajordomoRest_example
     
 Note: If you just want to implement a service, it will not be required and brings no benefit to checkout and build opencmw-cpp separately.
 
-There are environment variables which optionally can be used to point to your checkout of libfmt and/or opencmw-cpp.
+There are environment variables which optionally can be used to point to your checkout of libfmt, opencmw-cpp, etc.
 (The same works for opencmw's dependencies as it internally uses fetchContent as well)
 
 To do so, refer to the top folder of the other projects, which contains the toplevel `CMakeList.txt`:
