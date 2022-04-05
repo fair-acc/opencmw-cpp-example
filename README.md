@@ -6,13 +6,14 @@ Some dependencies (openssl, zlib) are assumed to be installed system wide such t
 
 ### Building
 
-``` bash
+```bash
 cmake -S . -B build
 cmake --build build
 build/src/MajordomoRest_example
 ```
+
 ### Building against local dependencies
-    
+
 Note: If you just want to implement a service, it will not be required and brings no benefit to checkout and build opencmw-cpp separately.
 
 There are environment variables which optionally can be used to point to your checkout of libfmt, opencmw-cpp, etc.
@@ -20,7 +21,7 @@ There are environment variables which optionally can be used to point to your ch
 
 To do so, refer to the top folder of the other projects, which contains the toplevel `CMakeList.txt`:
 
-``` bash
+```bash
 cmake -S . -B build -DFETCHCONTENT_SOURCE_DIR_FMT=~/libfmt -DFETCHCONTENT_SOURCE_DIR_OPENCMW-CPP=~/opencmw-cpp
 ```
 
