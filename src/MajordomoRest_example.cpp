@@ -32,9 +32,9 @@ public:
     static auto deserializeSemicolonFormattedMessage(std::string_view method, std::string_view serialized) {
         // clang-format off
         auto result = MdpMessage::createClientMessage(
-                method == "SUB" ? Command::Subscribe :
-                method == "PUT" ? Command::Set :
-                /* default */     Command::Get);
+                          method == "SUB" ? Command::Subscribe :
+                          method == "PUT" ? Command::Set :
+                          /* default */     Command::Get);
         // clang-format on
 
         // For the time being, just use ';' as frame separator. Not meant
@@ -102,7 +102,7 @@ struct Reply {
         REPLY_OPTION3,
         REPLY_OPTION4
     };
-*/
+    */
     std::string        name;
     bool               booleanReturnType;
     int8_t             byteReturnType;
@@ -260,11 +260,11 @@ int main() {
 
     std::jthread                                                                                      helloWorldThread([&helloWorldWorker] {
         helloWorldWorker.run();
-                                                                                         });
+    });
 
     std::jthread                                                                                      imageThread([&imageWorker] {
         imageWorker.run();
-                                                                                         });
+    });
 
     primaryBrokerThread.join();
 
