@@ -8,7 +8,7 @@ Some dependencies (openssl, zlib) are assumed to be installed system wide such t
 
 Fetch the required dependencies and set the defaut compiler to gcc >12.2.0 (for example for ubuntu 22.04):
 
-``` bash
+```bash
 sudo apt install build-essential cmake pkgconf libssl-dev zlib1g-dev libbrotli-dev
 sudo apt install -y gcc-12 g++-12
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 110 --slave /usr/bin/g++ g++ /usr/bin/g++-12 --slave /usr/bin/gcov gcov /usr/bin/gcov-12
