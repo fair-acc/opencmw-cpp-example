@@ -14,10 +14,10 @@ CMRC_DECLARE(testImages);
 CMRC_DECLARE(assets);
 
 // from restserver_testapp.cpp
-template<typename Mode, typename VirtualFS, role... Roles>
-class FileServerRestBackend : public RestBackend<Mode, VirtualFS, Roles...> {
+template<typename Mode, typename VirtualFS, opencmw::majordomo::role... Roles>
+class FileServerRestBackend : public opencmw::majordomo::RestBackend<Mode, VirtualFS, Roles...> {
 private:
-    using super_t = RestBackend<Mode, VirtualFS, Roles...>;
+    using super_t = opencmw::majordomo::RestBackend<Mode, VirtualFS, Roles...>;
     std::filesystem::path _serverRoot;
     using super_t::_svr;
     using super_t::DEFAULT_REST_SCHEME;
@@ -25,30 +25,8 @@ private:
 public:
     using super_t::RestBackend;
 
-    FileServerRestBackend(Broker<Roles...> &broker, const VirtualFS &vfs, std::filesystem::path serverRoot, opencmw::URI<> restAddress = opencmw::URI<>::factory().scheme(DEFAULT_REST_SCHEME).hostName("0.0.0.0").port(DEFAULT_REST_PORT).build())
-        : super_t(broker, vfs, restAddress), _serverRoot(std::move(serverRoot)) {
-    }
-
-    static auto deserializeSemicolonFormattedMessage(std::string_view method, std::string_view serialized) {
-        // clang-format off
-        auto result = MdpMessage::createClientMessage(
-                method == "SUB" ? Command::Subscribe :
-                method == "PUT" ? Command::Set :
-                /* default */     Command::Get);
-        // clang-format on
-
-        // For the time being, just use ';' as frame separator. Not meant
-        // to be a safe long-term solution:
-        auto       currentBegin = serialized.cbegin();
-        const auto bodyEnd      = serialized.cend();
-        auto       currentEnd   = std::find(currentBegin, serialized.cend(), ';');
-
-        for (std::size_t i = 2; i < result.requiredFrameCount(); ++i) {
-            result.setFrameData(i, std::string_view(currentBegin, currentEnd), MessageFrame::dynamic_bytes_tag{});
-            currentBegin = (currentEnd != bodyEnd) ? currentEnd + 1 : bodyEnd;
-            currentEnd   = std::find(currentBegin, serialized.cend(), ';');
-        }
-        return result;
+    FileServerRestBackend(opencmw::majordomo::Broker<Roles...> &broker, const VirtualFS &vfs, std::filesystem::path serverRoot, opencmw::URI<> restAddress = opencmw::URI<>::factory().scheme(DEFAULT_REST_SCHEME).hostName("0.0.0.0").port(opencmw::majordomo::DEFAULT_REST_PORT).build())
+            : super_t(broker, vfs, restAddress), _serverRoot(std::move(serverRoot)) {
     }
 
     void registerHandlers() override {
@@ -124,12 +102,14 @@ struct HelloWorldHandler {
         using namespace std::chrono;
         const auto now        = system_clock::now();
         const auto sinceEpoch = system_clock::to_time_t(now);
-        out.name              = fmt::format("Hello World! The local time is: {}", std::put_time(std::localtime(&sinceEpoch), "%Y-%m-%d %H:%M:%S"));
+        std::stringstream buffer{};
+        buffer << std::put_time(std::localtime(&sinceEpoch), "%Y-%m-%d %H:%M:%S");
+        out.name              = fmt::format("Hello World! The local time is: {}", buffer.str());
         out.byteArray         = in.name; // doesn't really make sense atm
         out.byteReturnType    = 42;
 
         out.timingCtx         = opencmw::TimingCtx(3, {}, {}, {}, duration_cast<microseconds>(now.time_since_epoch()));
-        if (rawCtx.request.command() == Command::Set) {
+        if (rawCtx.request.command == opencmw::mdp::Command::Set) {
             customFilter = in.customFilter;
         }
         out.lsaContext           = customFilter;
@@ -201,7 +181,7 @@ public:
                 reply.image.base64      = base64pp::encode(imageData[selectedImage]);
                 reply.image.contentType = "image/png"; // MIME::PNG;
                 // TODO the subscription via REST has a leading slash, so this "/" is necessary for it to match, check if that can be avoided
-                super_t::notify("/", context, reply);
+                super_t::notify(context, reply);
             }
         });
 
@@ -226,7 +206,7 @@ int main() {
 
     // note: inconsistency: brokerName as ctor argument, worker's serviceName as NTTP
     // note: default roles different from java (has: ADMIN, READ_WRITE, READ_ONLY, ANYONE, NULL)
-    Broker                                          primaryBroker("PrimaryBroker");
+    Broker                                          primaryBroker("/PrimaryBroker");
     auto                                            fs = cmrc::assets::get_filesystem();
 
     FileServerRestBackend<PLAIN_HTTP, decltype(fs)> rest(primaryBroker, fs, "./");
@@ -244,7 +224,7 @@ int main() {
     });
 
     // second broker to test DNS functionalities
-    Broker       secondaryBroker("SecondaryTestBroker", { .dnsAddress = brokerRouterAddress->str() });
+    Broker       secondaryBroker("/SecondaryTestBroker", { .dnsAddress = brokerRouterAddress->str() });
 
     std::jthread secondaryBrokerThread([&secondaryBroker] {
         secondaryBroker.run();
@@ -255,8 +235,8 @@ int main() {
 
     // TODO '"Reply": { "name": ... }' isn't valid json I think (not an object at top-level; also, Firefox doesn't like it). Should we omit the '"Reply:"?
 
-    Worker<"helloWorld", TestContext, Request, Reply, description<"A friendly service saying hello">> helloWorldWorker(primaryBroker, HelloWorldHandler());
-    ImageServiceWorker<"testImage", description<"Returns an image">>                                  imageWorker(primaryBroker, std::chrono::seconds(10));
+    Worker<"/helloWorld", TestContext, Request, Reply, description<"A friendly service saying hello">> helloWorldWorker(primaryBroker, HelloWorldHandler());
+    ImageServiceWorker<"/testImage", description<"Returns an image">>                                  imageWorker(primaryBroker, std::chrono::seconds(10));
 
     std::jthread                                                                                      helloWorldThread([&helloWorldWorker] {
         helloWorldWorker.run();
